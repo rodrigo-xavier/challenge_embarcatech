@@ -28,25 +28,33 @@ set(PICO_BOARD pico_w CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(challenge_embarcatech C CXX ASM)
+project(main C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(challenge_embarcatech
-    challenge_embarcatech.c
+add_executable(main
+    main.c
     )
 
 # pull in common dependencies
-target_link_libraries(challenge_embarcatech pico_stdlib)
+target_link_libraries(main pico_stdlib)
+target_link_libraries(main pico_stdlib hardware_pwm)
+target_link_libraries(main pico_stdlib hardware_adc)
+target_link_libraries(main pico_stdlib hardware_i2c)
 
 if (PICO_CYW43_SUPPORTED)
-    target_link_libraries(challenge_embarcatech pico_cyw43_arch_none)
+    target_link_libraries(main pico_cyw43_arch_none)
 endif()
 
 # create map/bin/hex file etc.
-pico_add_extra_outputs(challenge_embarcatech)
+pico_add_extra_outputs(main)
 
 # add url via pico_set_program_url
+
+# Adiciona suporte às bibliotecas necessárias
+# A função pico_enable_stdio_* habilita saída pela UART ou USB
+pico_enable_stdio_uart(main 1)  # Habilita saída pela UART (1 = ativo)
+pico_enable_stdio_usb(main 1)   # Desativa saída pela USB (0 = inativo)
