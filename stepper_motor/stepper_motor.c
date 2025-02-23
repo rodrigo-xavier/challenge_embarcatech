@@ -16,35 +16,38 @@ void init_stepper_motor(StepperMotor *motor) {
     motor->current_angle = 0;  // Inicializa o ângulo do motor como 0
 }
 
-// Função para movimentar um motor de passo
-void move_stepper_motor(StepperMotor *motor, bool direction, int steps, int delay) {
-    // Verifica se o motor tem limites de ângulo definidos
-    if ((motor->min_angle != -1 && direction == true && motor->current_angle <= motor->min_angle) ||
-        (motor->max_angle != -1 && direction == false && motor->current_angle >= motor->max_angle)) {
-        // Se o motor atingir o limite, não realiza o movimento
-        printf("Limite de ângulo alcançado! Movimento interrompido.\n");
-        return;
-    }
-
-    gpio_put(motor->dir_pin, direction); // Define a direção
-    for (int i = 0; i < steps; i++) {
-        gpio_put(motor->step_pin, 1);
-        sleep_us(delay);
-        gpio_put(motor->step_pin, 0);
-        sleep_us(delay);
-
-        // Atualiza o ângulo atual
-        if (direction == true) {
-            motor->current_angle--;  // Movimento para a esquerda diminui o ângulo
-        } else {
-            motor->current_angle++;  // Movimento para a direita aumenta o ângulo
-        }
-
-        // Verifica novamente após cada passo se o limite foi atingido
-        if ((motor->min_angle != -1 && motor->current_angle <= motor->min_angle) ||
-            (motor->max_angle != -1 && motor->current_angle >= motor->max_angle)) {
-            printf("Limite de ângulo alcançado! Movimento interrompido.\n");
-            break; // Interrompe o movimento se o limite for atingido
-        }
-    }
+int calculate_steps(int revolution_steps, uint angle){
+    uint steps = (revolution_steps / 360) * angle;
+    return steps;
 }
+
+void move_stepper_motor(StepperMotor *motor, bool direction, uint angle, int delay_us) {
+    int new_angle = direction ? (motor->current_angle + angle) : (motor->current_angle - angle);
+
+    // Verificar se min_angle ou max_angle são NULL (sem limite de ângulo)
+    if (motor->min_angle != -1 && new_angle < motor->min_angle) {
+        angle = motor->min_angle;  // Ajusta para o ângulo mínimo
+    }
+    if (motor->max_angle != -1 && new_angle > motor->max_angle) {
+        angle = motor->max_angle;  // Ajusta para o ângulo máximo
+    }
+
+    // Calcular o número de passos com base no ângulo ajustado
+    uint steps = calculate_steps(motor->default_revolution_steps, angle);
+
+    // Define a direção de rotação
+    gpio_put(motor->dir_pin, direction);
+
+    // Move o motor o número de passos calculado
+    for (int i = 0; i < steps; i++) {
+        gpio_put(motor->step_pin, 1);      // Envia pulso de STEP
+        sleep_us(delay_us);                 // Delay entre os pulsos
+        gpio_put(motor->step_pin, 0);      // Desliga o pulso de STEP
+        sleep_us(delay_us);                 // Delay entre os pulsos
+    }
+
+    // Atualiza o ângulo atual do motor após o movimento
+    motor->current_angle = angle;
+}
+
+

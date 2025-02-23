@@ -46,8 +46,10 @@
 // Definição do pino do servo SG90
 #define SERVO_PIN 17
 
-// Número de passos para 15° (considerando motor de 200 passos por revolução)
-#define STEPS_15_DEGREES (200 / 360.0 * 50)
+#define DEFAULT_REVOLUTION_STEPS 400 // Quantidade de passos para completar uma volta 360º
+
+#define DIREITA false
+#define ESQUERDA true
 
 // Inicializa o LED como PWM
 int pico_led_init(void) {
@@ -85,8 +87,9 @@ int main() {
     hard_assert(rc == PICO_OK);
 
     // Inicializa motores de passo
-    StepperMotor motor_ovo = {DIR1, STEP1, EN1, -1, -1};  // Motor_ovo não tem ângulos mínimos ou máximos
-    StepperMotor motor_caneta = {DIR2, STEP2, EN2, 0, 180}; // Motor_caneta com ângulos de 0 a 180
+    // Motor_ovo não tem ângulos mínimos ou máximos
+    StepperMotor motor_ovo = {DIR1, STEP1, EN1, -1, -1, 0, DEFAULT_REVOLUTION_STEPS};
+    StepperMotor motor_caneta = {DIR2, STEP2, EN2, 45, 135, 90, DEFAULT_REVOLUTION_STEPS};
 
     init_stepper_motor(&motor_ovo);
     init_stepper_motor(&motor_caneta);
@@ -100,24 +103,20 @@ int main() {
         pico_set_led(false);
         sleep_ms(LED_DELAY_MS);
 
-        printf("Movendo motores de passo 15° para a esquerda...\n");
-        move_stepper_motor(&motor_ovo, true, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(&motor_caneta, false, STEPS_15_DEGREES, 1000);
+        printf("Movendo motor_ovo 360° para a direita...\n");
+        move_stepper_motor(&motor_ovo, DIREITA, 360, 2000); // 360° para a direita
         sleep_ms(500);
 
-        printf("Voltando ao centro...\n");
-        move_stepper_motor(&motor_ovo, false, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(&motor_caneta, true, STEPS_15_DEGREES, 1000);
+        printf("Movendo motor_caneta 50° para a direita...\n");
+        move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
         sleep_ms(500);
 
-        printf("Movendo motores de passo 15° para a direita...\n");
-        move_stepper_motor(&motor_ovo, false, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(&motor_caneta, true, STEPS_15_DEGREES, 1000);
+        printf("Movendo motor_caneta 100° para a esquerda...\n");
+        move_stepper_motor(&motor_caneta, ESQUERDA, 60, 2000);
         sleep_ms(500);
 
-        printf("Voltando ao centro...\n");
-        move_stepper_motor(&motor_ovo, true, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(&motor_caneta, false, STEPS_15_DEGREES, 1000);
+        printf("Movendo motor_caneta 50° para a direita...\n");
+        move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
         sleep_ms(500);
 
         open_servo(SERVO_PIN);

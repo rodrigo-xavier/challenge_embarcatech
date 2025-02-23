@@ -5,22 +5,23 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 
-// Número de passos para 15° (considerando motor de 200 passos por revolução)
-#define STEPS_15_DEGREES (200 / 360.0 * 50)
-
 typedef struct {
-    uint dir_pin;
-    uint step_pin;
-    uint enable_pin;
+    uint dir_pin; // Pino de Direção
+    uint step_pin; // Pino de step
+    uint enable_pin; // Pino de Enable
     int min_angle;  // Usado apenas para motor2
     int max_angle;  // Usado apenas para motor2
     int current_angle; // Armazena o ângulo atual do motor
+    int default_revolution_steps;   // Número de passos por revolução
 } StepperMotor;
 
 // Função para inicializar GPIOs dos motores de passo
 void init_stepper_motor(StepperMotor *motor);
 
 // Função para movimentar um motor de passo
-void move_stepper_motor(StepperMotor *motor, bool direction, int steps, int delay);
+void move_stepper_motor(StepperMotor *motor, bool direction, uint angle, int delay);
+
+// Função para calcular a quantidade de passos por ângulo
+int calculate_steps(int revolution_steps, uint angle);
 
 #endif // STEPPER_MOTOR_H
