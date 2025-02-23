@@ -9,6 +9,7 @@
 #include "hardware/pwm.h"
 #include "pico/cyw43_arch.h"
 #include "servo_motor.h"
+#include "stepper_motor.h"
 
 // Pico W devices use a GPIO on the WIFI chip for the LED,
 // so when building for Pico W, CYW43_WL_GPIO_LED_PIN will be defined
@@ -48,45 +49,21 @@
 // Número de passos para 15° (considerando motor de 200 passos por revolução)
 #define STEPS_15_DEGREES (200 / 360.0 * 50)
 
-// Função para inicializar GPIOs dos motores de passo
-void init_stepper_motor(uint dir, uint step, uint enable) {
-    gpio_init(dir);
-    gpio_set_dir(dir, GPIO_OUT);
-
-    gpio_init(step);
-    gpio_set_dir(step, GPIO_OUT);
-
-    gpio_init(enable);
-    gpio_set_dir(enable, GPIO_OUT);
-    gpio_put(enable, 0);  // Habilita os drivers
-}
-
-// Função para movimentar um motor de passo
-void move_stepper_motor(uint dir, uint step, bool direction, int steps, int delay) {
-    gpio_put(dir, direction); // Define a direção
-    for (int i = 0; i < steps; i++) {
-        gpio_put(step, 1);
-        sleep_us(delay);
-        gpio_put(step, 0);
-        sleep_us(delay);
-    }
-}
-
 // Inicializa o LED como PWM
 int pico_led_init(void) {
     #if defined(PICO_DEFAULT_LED_PIN)
         gpio_set_function(PICO_DEFAULT_LED_PIN, GPIO_FUNC_PWM);  // Configura como PWM
         uint slice = pwm_gpio_to_slice_num(PICO_DEFAULT_LED_PIN);
-        
+
         pwm_set_wrap(slice, 255);   // Define resolução do PWM (0-255)
         pwm_set_clkdiv(slice, 4.0); // Ajusta a frequência do PWM
-    
+
         pwm_set_enabled(slice, true);
     #elif defined(CYW43_WL_GPIO_LED_PIN)
         return cyw43_arch_init();  // Inicializa WiFi chip (caso do Pico W)
     #endif
     }
-    
+
     // Controla o LED com brilho ajustável
     void pico_set_led(bool led_on) {
     #if defined(PICO_DEFAULT_LED_PIN)
@@ -108,8 +85,11 @@ int main() {
     hard_assert(rc == PICO_OK);
 
     // Inicializa motores de passo
-    init_stepper_motor(DIR1, STEP1, EN1);
-    init_stepper_motor(DIR2, STEP2, EN2);
+    StepperMotor motor_ovo = {DIR1, STEP1, EN1, -1, -1};  // Motor_ovo não tem ângulos mínimos ou máximos
+    StepperMotor motor_caneta = {DIR2, STEP2, EN2, 0, 180}; // Motor_caneta com ângulos de 0 a 180
+
+    init_stepper_motor(&motor_ovo);
+    init_stepper_motor(&motor_caneta);
 
     // Inicializa servo motor
     init_servo(SERVO_PIN);
@@ -120,29 +100,24 @@ int main() {
         pico_set_led(false);
         sleep_ms(LED_DELAY_MS);
 
-        pico_set_led(true);
-        sleep_ms(250);
-        pico_set_led(false);
-        sleep_ms(250);
-
         printf("Movendo motores de passo 15° para a esquerda...\n");
-        move_stepper_motor(DIR1, STEP1, true, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(DIR2, STEP2, false, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_ovo, true, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_caneta, false, STEPS_15_DEGREES, 1000);
         sleep_ms(500);
 
         printf("Voltando ao centro...\n");
-        move_stepper_motor(DIR1, STEP1, false, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(DIR2, STEP2, true, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_ovo, false, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_caneta, true, STEPS_15_DEGREES, 1000);
         sleep_ms(500);
 
         printf("Movendo motores de passo 15° para a direita...\n");
-        move_stepper_motor(DIR1, STEP1, false, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(DIR2, STEP2, true, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_ovo, false, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_caneta, true, STEPS_15_DEGREES, 1000);
         sleep_ms(500);
 
         printf("Voltando ao centro...\n");
-        move_stepper_motor(DIR1, STEP1, true, STEPS_15_DEGREES, 1000);
-        move_stepper_motor(DIR2, STEP2, false, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_ovo, true, STEPS_15_DEGREES, 1000);
+        move_stepper_motor(&motor_caneta, false, STEPS_15_DEGREES, 1000);
         sleep_ms(500);
 
         open_servo(SERVO_PIN);
