@@ -9,6 +9,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Define a variável do diretório onde os cabeçalhos estão localizados
 include_directories(${CMAKE_SOURCE_DIR}/servo_motor)  # Adiciona o diretório 'servo_motor'
 include_directories(${CMAKE_SOURCE_DIR}/stepper_motor)  # Adiciona o diretório 'stepper_motor'
+include_directories(${CMAKE_SOURCE_DIR}/joystick)  # Adiciona o diretório 'stepper_motor'
+include_directories(${CMAKE_SOURCE_DIR}/working_led)  # Adiciona o diretório 'stepper_motor'
 
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
@@ -44,6 +46,8 @@ add_executable(main
     main.c
     servo_motor/servo_motor.c
     stepper_motor/stepper_motor.c
+    joystick/joystick.c
+    working_led/working_led.c
     )
 
 # Link libraries

@@ -7,19 +7,10 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
-#include "pico/cyw43_arch.h"
 #include "servo_motor.h"
 #include "stepper_motor.h"
-
-// Pico W devices use a GPIO on the WIFI chip for the LED,
-// so when building for Pico W, CYW43_WL_GPIO_LED_PIN will be defined
-#ifdef CYW43_WL_GPIO_LED_PIN
-#endif
-#define PICO_DEFAULT_LED_PIN 11              // GPIO11 para o LED
-
-#ifndef LED_DELAY_MS
-#define LED_DELAY_MS 100
-#endif
+#include "joystick.h"
+#include "working_led.h"
 
 
 // GPIOS MAP
@@ -31,7 +22,10 @@
 // GPIO9 (PICO W) - STEP (A4988 DRIVER 2)
 // GPIO8 (PICO W) - DIR (A4988 DRIVER 2)
 
-// GPI28 (PICO W) - S (MICRO SERVO SG90)
+// GPIO17 (PICO W) - S (MICRO SERVO SG90)
+
+// GPIO26 (PICO W) - X (JOYSTICK X AXIS)
+// GPIO27 (PICO W) - Y (JOYSTICK Y AXIS)
 
 
 // Definição dos pinos dos drivers A4988
@@ -43,86 +37,58 @@
 #define STEP2 9
 #define EN2   4
 
-// Definição do pino do servo SG90
-#define SERVO_PIN 17
-
 #define DEFAULT_REVOLUTION_STEPS 400 // Quantidade de passos para completar uma volta 360º
 
 #define DIREITA false
 #define ESQUERDA true
 
-// Inicializa o LED como PWM
-int pico_led_init(void) {
-    #if defined(PICO_DEFAULT_LED_PIN)
-        gpio_set_function(PICO_DEFAULT_LED_PIN, GPIO_FUNC_PWM);  // Configura como PWM
-        uint slice = pwm_gpio_to_slice_num(PICO_DEFAULT_LED_PIN);
-
-        pwm_set_wrap(slice, 255);   // Define resolução do PWM (0-255)
-        pwm_set_clkdiv(slice, 4.0); // Ajusta a frequência do PWM
-
-        pwm_set_enabled(slice, true);
-    #elif defined(CYW43_WL_GPIO_LED_PIN)
-        return cyw43_arch_init();  // Inicializa WiFi chip (caso do Pico W)
-    #endif
-    }
-
-    // Controla o LED com brilho ajustável
-    void pico_set_led(bool led_on) {
-    #if defined(PICO_DEFAULT_LED_PIN)
-        uint slice = pwm_gpio_to_slice_num(PICO_DEFAULT_LED_PIN);
-        if (led_on) {
-            pwm_set_gpio_level(PICO_DEFAULT_LED_PIN, 25);  // 10% de 255
-        } else {
-            pwm_set_gpio_level(PICO_DEFAULT_LED_PIN, 0);   // Desliga o LED
-        }
-    #elif defined(CYW43_WL_GPIO_LED_PIN)
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
-    #endif
-    }
 
 int main() {
     stdio_init_all();
 
+    // Configura o Working Led
     int rc = pico_led_init();
     hard_assert(rc == PICO_OK);
 
+    // Inicializar o joystick
+    init_joystick();
+
+    // Inicializa servo motor
+    init_servo();
+
+
     // Inicializa motores de passo
-    // Motor_ovo não tem ângulos mínimos ou máximos
     StepperMotor motor_ovo = {DIR1, STEP1, EN1, -1, -1, 0, DEFAULT_REVOLUTION_STEPS};
     StepperMotor motor_caneta = {DIR2, STEP2, EN2, 45, 135, 90, DEFAULT_REVOLUTION_STEPS};
 
     init_stepper_motor(&motor_ovo);
     init_stepper_motor(&motor_caneta);
 
-    // Inicializa servo motor
-    init_servo(SERVO_PIN);
+    while (true) {
+        set_working_led();
 
-    while (1) {
-        pico_set_led(true);
-        sleep_ms(LED_DELAY_MS);
-        pico_set_led(false);
-        sleep_ms(LED_DELAY_MS);
+        control_stepper_by_joystick(&motor_ovo, &motor_caneta);
 
-        printf("Movendo motor_ovo 360° para a direita...\n");
-        move_stepper_motor(&motor_ovo, DIREITA, 360, 2000); // 360° para a direita
-        sleep_ms(500);
+        // printf("Movendo motor_ovo 360° para a direita...\n");
+        // move_stepper_motor(&motor_ovo, DIREITA, 360, 2000); // 360° para a direita
+        // sleep_ms(500);
 
-        printf("Movendo motor_caneta 50° para a direita...\n");
-        move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
-        sleep_ms(500);
+        // printf("Movendo motor_caneta 50° para a direita...\n");
+        // move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
+        // sleep_ms(500);
 
-        printf("Movendo motor_caneta 100° para a esquerda...\n");
-        move_stepper_motor(&motor_caneta, ESQUERDA, 60, 2000);
-        sleep_ms(500);
+        // printf("Movendo motor_caneta 100° para a esquerda...\n");
+        // move_stepper_motor(&motor_caneta, ESQUERDA, 60, 2000);
+        // sleep_ms(500);
 
-        printf("Movendo motor_caneta 50° para a direita...\n");
-        move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
-        sleep_ms(500);
+        // printf("Movendo motor_caneta 50° para a direita...\n");
+        // move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
+        // sleep_ms(500);
 
-        open_servo(SERVO_PIN);
-        sleep_ms(1000);
-        close_servo(SERVO_PIN);
-        sleep_ms(1000);
+        // open_servo();
+        // sleep_ms(1000);
+        // close_servo();
+        // sleep_ms(1000);
 
     }
 }

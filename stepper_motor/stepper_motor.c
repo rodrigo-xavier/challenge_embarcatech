@@ -50,4 +50,25 @@ void move_stepper_motor(StepperMotor *motor, bool direction, uint angle, int del
     motor->current_angle = angle;
 }
 
+// Função para controlar os motores com o joystick
+void control_stepper_by_joystick(StepperMotor *motor_x, StepperMotor *motor_y) {
+    bool direction_x, direction_y;
+    float angle_x, angle_y;
+
+    // Obtém os valores do joystick
+    get_joystick_angle_and_direction(&direction_x, &angle_x, &direction_y, &angle_y);
+
+    // Define um delay padrão para controle do motor
+    int delay_us = 2000;
+
+    // Move o motor X conforme os valores do joystick
+    if (angle_x > 5.0) {  // Define um limite mínimo para evitar pequenas variações
+        move_stepper_motor(&motor_x, direction_x, (uint)angle_x, delay_us);
+    }
+
+    // Move o motor Y conforme os valores do joystick
+    if (angle_y > 5.0) {  // Define um limite mínimo para evitar pequenas variações
+        move_stepper_motor(&motor_y, direction_y, (uint)angle_y, delay_us);
+    }
+}
 

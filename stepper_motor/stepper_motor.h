@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
+#include "../joystick/joystick.h"
 
 typedef struct {
     uint dir_pin; // Pino de Direção
@@ -23,5 +24,7 @@ void move_stepper_motor(StepperMotor *motor, bool direction, uint angle, int del
 
 // Função para calcular a quantidade de passos por ângulo
 int calculate_steps(int revolution_steps, uint angle);
+
+void control_stepper_by_joystick(StepperMotor *motor_x, StepperMotor *motor_y);
 
 #endif // STEPPER_MOTOR_H

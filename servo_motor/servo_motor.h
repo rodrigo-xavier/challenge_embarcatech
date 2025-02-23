@@ -8,9 +8,9 @@
 
 #define SERVO_PIN 17
 
-void init_servo(uint pin);
-void move_servo(uint pin, int angle);
-void open_servo(uint pin);
-void close_servo(uint pin);
+void init_servo();
+void move_servo(int angle);
+void open_servo();
+void close_servo();
 
 #endif // SERVO_MOTOR_H
