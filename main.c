@@ -8,6 +8,7 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 #include "pico/cyw43_arch.h"
+#include "servo_motor.h"
 
 // Pico W devices use a GPIO on the WIFI chip for the LED,
 // so when building for Pico W, CYW43_WL_GPIO_LED_PIN will be defined
@@ -71,23 +72,6 @@ void move_stepper_motor(uint dir, uint step, bool direction, int steps, int dela
     }
 }
 
-// Função para configurar o PWM do servo
-void init_servo(uint pin) {
-    gpio_set_function(pin, GPIO_FUNC_PWM);
-    uint slice = pwm_gpio_to_slice_num(pin);
-    pwm_set_wrap(slice, 20000);  // Período de 20ms
-    pwm_set_clkdiv(slice, 125.0); // Divide clock para frequência correta
-    pwm_set_enabled(slice, true);
-}
-
-// Função para mover o servo para um ângulo específico
-void move_servo(uint pin, int angle) {
-    uint slice = pwm_gpio_to_slice_num(pin);
-    uint duty = 500 + (angle * 11); // Converte ângulo para PWM (500 a 2500us)
-    pwm_set_gpio_level(pin, duty);
-}
-
-
 // Inicializa o LED como PWM
 int pico_led_init(void) {
     #if defined(PICO_DEFAULT_LED_PIN)
@@ -130,10 +114,6 @@ int main() {
     // Inicializa servo motor
     init_servo(SERVO_PIN);
 
-    printf("Movendo servo para 90°...\n");
-    move_servo(SERVO_PIN, 180);
-    sleep_ms(500);
-
     while (1) {
         pico_set_led(true);
         sleep_ms(LED_DELAY_MS);
@@ -165,17 +145,10 @@ int main() {
         move_stepper_motor(DIR2, STEP2, false, STEPS_15_DEGREES, 1000);
         sleep_ms(500);
 
-        printf("Voltando servo para 90°...\n");
-        for (int angle = 180; angle >= 90; angle--) {
-            move_servo(SERVO_PIN, angle);
-            sleep_ms(10);
-        }
-
-        printf("Movendo servo de 90° para 180°...\n");
-        for (int angle = 90; angle <= 180; angle++) {
-            move_servo(SERVO_PIN, angle);
-            sleep_ms(10);  // Pequeno atraso para suavizar o movimento
-        }
+        open_servo(SERVO_PIN);
+        sleep_ms(1000);
+        close_servo(SERVO_PIN);
+        sleep_ms(1000);
 
     }
 }

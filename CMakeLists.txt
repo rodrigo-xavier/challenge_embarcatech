@@ -6,15 +6,20 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Define a variável do diretório onde os cabeçalhos estão localizados
+include_directories(${CMAKE_SOURCE_DIR}/servo_motor)  # Adiciona o diretório 'servo_motor'
+
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
 
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
 else()
     set(USERHOME $ENV{HOME})
 endif()
+
 set(sdkVersion 2.1.0)
 set(toolchainVersion 13_3_Rel1)
 set(picotoolVersion 2.1.0)
@@ -34,12 +39,12 @@ project(main C CXX ASM)
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
-
 add_executable(main
     main.c
+    servo_motor/servo_motor.c
     )
 
-# pull in common dependencies
+# Link libraries
 target_link_libraries(main pico_stdlib)
 target_link_libraries(main pico_stdlib hardware_pwm)
 target_link_libraries(main pico_stdlib hardware_adc)
@@ -58,3 +63,4 @@ pico_add_extra_outputs(main)
 # A função pico_enable_stdio_* habilita saída pela UART ou USB
 pico_enable_stdio_uart(main 1)  # Habilita saída pela UART (1 = ativo)
 pico_enable_stdio_usb(main 1)   # Desativa saída pela USB (0 = inativo)
+
