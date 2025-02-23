@@ -63,12 +63,12 @@ void control_stepper_by_joystick(StepperMotor *motor_x, StepperMotor *motor_y) {
 
     // Move o motor X conforme os valores do joystick
     if (angle_x > 5.0) {  // Define um limite mínimo para evitar pequenas variações
-        move_stepper_motor(&motor_x, direction_x, (uint)angle_x, delay_us);
+        move_stepper_motor(motor_x, direction_x, (uint)angle_x, delay_us);
     }
 
     // Move o motor Y conforme os valores do joystick
     if (angle_y > 5.0) {  // Define um limite mínimo para evitar pequenas variações
-        move_stepper_motor(&motor_y, direction_y, (uint)angle_y, delay_us);
+        move_stepper_motor(motor_y, direction_y, (uint)angle_y, delay_us);
     }
 }
 

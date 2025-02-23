@@ -131,25 +131,42 @@ int main() {
     while (true) {
         set_working_led();
         // main_audio();
-
         uint16_t x, y;
         read_joystick(&x, &y);
-
+    
+        // Calcula ângulos e direções do joystick
+        bool direction_x, direction_y;
+        float angle_x, angle_y;
+        get_joystick_angle_and_direction(&direction_x, &angle_x, &direction_y, &angle_y);
+    
         // Limpa o display
         memset(buf, 0, SSD1306_BUF_LEN);
-
-        // Exibir os valores do joystick
-        char text[20];
-        snprintf(text, sizeof(text), "X: %d", x);
+    
+        // Exibir os valores dos ângulos e direções
+        char text[30];
+    
+        // Exibe ângulo X
+        snprintf(text, sizeof(text), "X: %.2f", angle_x);
         WriteString(buf, 5, 10, text);
-
-        snprintf(text, sizeof(text), "Y: %d", y);
+    
+        // Exibe direção X
+        snprintf(text, sizeof(text), "X: %s", direction_x ? "Direita" : "Esquerda");
         WriteString(buf, 5, 20, text);
-
+    
+        // // Exibe ângulo Y
+        // snprintf(text, sizeof(text), "Angle Y: %.2f", angle_y);
+        // WriteString(buf, 5, 30, text);
+    
+        // // Exibe direção Y
+        // snprintf(text, sizeof(text), "Dir Y: %s", direction_y ? "Direita" : "Esquerda");
+        // WriteString(buf, 5, 40, text);
+    
         render(buf, &frame_area);
         sleep_ms(500); // Atualiza a cada 500ms
-
+    
         control_stepper_by_joystick(&motor_ovo, &motor_caneta);
+        
+        
 
         // printf("Movendo motor_ovo 360° para a direita...\n");
         // move_stepper_motor(&motor_ovo, DIREITA, 360, 2000); // 360° para a direita
@@ -173,4 +190,5 @@ int main() {
         // sleep_ms(1000);
 
     }
+    return 0;
 }
