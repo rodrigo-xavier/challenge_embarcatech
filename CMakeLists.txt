@@ -11,6 +11,8 @@ include_directories(${CMAKE_SOURCE_DIR}/servo_motor)  # Adiciona o diretório 's
 include_directories(${CMAKE_SOURCE_DIR}/stepper_motor)  # Adiciona o diretório 'stepper_motor'
 include_directories(${CMAKE_SOURCE_DIR}/joystick)  # Adiciona o diretório 'stepper_motor'
 include_directories(${CMAKE_SOURCE_DIR}/working_led)  # Adiciona o diretório 'stepper_motor'
+include_directories(${CMAKE_SOURCE_DIR}/audio)  # Adiciona o diretório 'stepper_motor'
+include_directories(${CMAKE_SOURCE_DIR}/display_oled)  # Adiciona o diretório 'stepper_motor'
 
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
@@ -48,17 +50,29 @@ add_executable(main
     stepper_motor/stepper_motor.c
     joystick/joystick.c
     working_led/working_led.c
+    audio/play_audio.c
+    display_oled/ssd1306_i2c.c
     )
 
+pico_set_program_name(main "BitDogLab")
+pico_set_program_version(main "0.1")
+
 # Link libraries
-target_link_libraries(main pico_stdlib)
-target_link_libraries(main pico_stdlib hardware_pwm)
-target_link_libraries(main pico_stdlib hardware_adc)
-target_link_libraries(main pico_stdlib hardware_i2c)
+target_link_libraries(main
+    pico_stdlib
+    hardware_pwm
+    hardware_adc
+    hardware_i2c
+    )
 
 if (PICO_CYW43_SUPPORTED)
     target_link_libraries(main pico_cyw43_arch_none)
 endif()
+
+target_include_directories(main PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}
+  ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
+)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(main)
@@ -67,6 +81,6 @@ pico_add_extra_outputs(main)
 
 # Adiciona suporte às bibliotecas necessárias
 # A função pico_enable_stdio_* habilita saída pela UART ou USB
-pico_enable_stdio_uart(main 1)  # Habilita saída pela UART (1 = ativo)
+pico_enable_stdio_uart(main 0)  # Habilita saída pela UART (1 = ativo)
 pico_enable_stdio_usb(main 1)   # Desativa saída pela USB (0 = inativo)
 
