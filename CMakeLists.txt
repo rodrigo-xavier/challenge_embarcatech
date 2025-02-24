@@ -13,6 +13,7 @@ include_directories(${CMAKE_SOURCE_DIR}/joystick)  # Adiciona o diretório 'step
 include_directories(${CMAKE_SOURCE_DIR}/working_led)  # Adiciona o diretório 'stepper_motor'
 include_directories(${CMAKE_SOURCE_DIR}/audio)  # Adiciona o diretório 'stepper_motor'
 include_directories(${CMAKE_SOURCE_DIR}/display_oled)  # Adiciona o diretório 'stepper_motor'
+include_directories(${CMAKE_SOURCE_DIR}/buttons)  # Adiciona o diretório 'stepper_motor'
 
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
@@ -52,6 +53,7 @@ add_executable(main
     working_led/working_led.c
     audio/play_audio.c
     display_oled/ssd1306_i2c.c
+    buttons/buttons.c
     )
 
 pico_set_program_name(main "BitDogLab")

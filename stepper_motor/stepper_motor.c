@@ -72,3 +72,81 @@ void control_stepper_by_joystick(StepperMotor *motor_x, StepperMotor *motor_y) {
     }
 }
 
+
+
+
+
+// Função para desenhar um triângulo
+void draw_triangle(StepperMotor *motor_x, StepperMotor *motor_y, int side_length) {
+    for (int i = 0; i < 3; i++) {
+        move_stepper_motor(motor_x, 1, side_length, 4000);  // Move para frente
+        move_stepper_motor(motor_y, 1, side_length, 4000);  // Move para o lado
+        move_stepper_motor(motor_x, 0, side_length, 4000);  // Move para trás
+        move_stepper_motor(motor_y, 0, side_length, 4000);  // Move para o lado
+    }
+}
+
+// Função para desenhar um quadrado
+void draw_square(StepperMotor *motor_x, StepperMotor *motor_y, int side_length) {
+    for (int i = 0; i < 4; i++) {
+        move_stepper_motor(motor_x, 1, side_length, 4000);  // Move para frente
+        move_stepper_motor(motor_y, 1, side_length, 4000);  // Move para o lado
+        move_stepper_motor(motor_x, 0, side_length, 4000);  // Move para trás
+        move_stepper_motor(motor_y, 0, side_length, 4000);  // Move para o lado
+    }
+}
+
+// Função para desenhar um círculo
+void draw_circle(StepperMotor *motor_x, StepperMotor *motor_y, int radius) {
+    int steps = 360;  // Número de passos para um círculo completo
+    for (int i = 0; i < steps; i++) {
+        float angle = i * (2 * M_PI / steps);  // Calcula o ângulo de cada passo
+        int x = radius * cos(angle);           // Calcula a posição X
+        int y = radius * sin(angle);           // Calcula a posição Y
+
+        move_stepper_motor(motor_x, 1, x, 4000); // Move no eixo X
+        move_stepper_motor(motor_y, 1, y, 4000); // Move no eixo Y
+    }
+}
+
+void draw_random(StepperMotor *motor_x, StepperMotor *motor_y) {
+    // Semente aleatória
+    srand(time(NULL));
+
+    // Gera um número aleatório de passos entre 100 e 500
+    int random_steps_x = rand() % 401 + 100;  // Número de passos aleatório para o motor X (entre 100 e 500)
+    int random_steps_y = rand() % 401 + 100;  // Número de passos aleatório para o motor Y (entre 100 e 500)
+
+    // Gera um valor aleatório para a direção de cada motor (1 = para frente, 0 = para trás)
+    bool direction_x = rand() % 2;  // Direção aleatória para o motor X
+    bool direction_y = rand() % 2;  // Direção aleatória para o motor Y
+
+    // Gera um valor aleatório para o delay entre os passos (simulando a velocidade do movimento)
+    int delay_us = 5000;
+
+    // Move os motores X e Y pelos passos aleatórios
+    move_stepper_motor(motor_x, direction_x, random_steps_x, delay_us);
+    move_stepper_motor(motor_y, direction_y, random_steps_y, delay_us);
+}
+
+// Função para desenhar formas
+void draw(StepperMotor *motor_x, StepperMotor *motor_y, int shape, int size) {
+    switch (shape) {
+        case 1:
+            draw_circle(motor_x, motor_y, size);    // Desenha um círculo
+            break;
+        case 2:
+            draw_triangle(motor_x, motor_y, size);  // Desenha um triângulo
+            break;
+        case 3:
+            draw_square(motor_x, motor_y, size);    // Desenha um quadrado
+            break;
+        case 4:
+            draw_random(motor_x, motor_y);    // Desenha um quadrado
+            break;
+        default:
+            printf("Forma desconhecida\n");
+            break;
+    }
+}
+

@@ -19,6 +19,7 @@
 #include "ssd1306.h"
 #include "hardware/i2c.h"
 #include "play_audio.h"
+#include "buttons.h"
 
 // GPIOS MAP
 // GPIO18 (PICO W) - DIR (A4988 DRIVER 1)
@@ -50,6 +51,15 @@
 #define ESQUERDA true
 
 
+#define CIRCLE 1
+#define TRIANGLE 2
+#define SQUARE 3
+#define RANDOM 4
+
+#define BUTTON_A_PIN 5          // GPIO5 para o botão A
+#define BUTTON_B_PIN 6          // GPIO6 para o botão B
+
+
 const uint I2C_SDA_PIN = 14;
 const uint I2C_SCL_PIN = 15;
 
@@ -59,19 +69,22 @@ int main() {
     setup_audio();
 
     // Configura o Working Led
-    // int rc = pico_led_init();
+    pico_led_init();
     // hard_assert(rc == PICO_OK);
 
     // Inicializar o joystick
     init_joystick();
 
-    // // Inicializa servo motor
+    // Inicializa servo motor
     init_servo();
 
+    // Inicializa botões
+    init_buttons();
 
-    // // Inicializa motores de passo
+
+    // Inicializa motores de passo
     StepperMotor motor_ovo = {DIR1, STEP1, EN1, -1, -1, 0, DEFAULT_REVOLUTION_STEPS};
-    StepperMotor motor_caneta = {DIR2, STEP2, EN2, 45, 135, 90, DEFAULT_REVOLUTION_STEPS};
+    StepperMotor motor_caneta = {DIR2, STEP2, EN2, 70, 110, 90, DEFAULT_REVOLUTION_STEPS};
 
     init_stepper_motor(&motor_ovo);
     init_stepper_motor(&motor_caneta);
@@ -127,68 +140,55 @@ int main() {
     render(buf, &frame_area);
     sleep_ms(3000); // Exibir por 3 segundos
 
+    memset(buf, 0, SSD1306_BUF_LEN);
+    WriteString(buf, 10, 10, "Escolha:");
+    WriteString(buf, 10, 20, "A - Manual");
+    WriteString(buf, 10, 30, "B - Random");
+    render(buf, &frame_area);
 
     while (true) {
         set_working_led();
-        // main_audio();
-        uint16_t x, y;
-        read_joystick(&x, &y);
-    
-        // Calcula ângulos e direções do joystick
-        bool direction_x, direction_y;
-        float angle_x, angle_y;
-        get_joystick_angle_and_direction(&direction_x, &angle_x, &direction_y, &angle_y);
-    
-        // Limpa o display
-        memset(buf, 0, SSD1306_BUF_LEN);
-    
-        // Exibir os valores dos ângulos e direções
-        char text[30];
-    
-        // Exibe ângulo X
-        snprintf(text, sizeof(text), "X: %.2f", angle_x);
-        WriteString(buf, 5, 10, text);
-    
-        // Exibe direção X
-        snprintf(text, sizeof(text), "X: %s", direction_x ? "Direita" : "Esquerda");
-        WriteString(buf, 5, 20, text);
-    
-        // // Exibe ângulo Y
-        // snprintf(text, sizeof(text), "Angle Y: %.2f", angle_y);
-        // WriteString(buf, 5, 30, text);
-    
-        // // Exibe direção Y
-        // snprintf(text, sizeof(text), "Dir Y: %s", direction_y ? "Direita" : "Esquerda");
-        // WriteString(buf, 5, 40, text);
-    
-        render(buf, &frame_area);
-        sleep_ms(500); // Atualiza a cada 500ms
-    
-        control_stepper_by_joystick(&motor_ovo, &motor_caneta);
-        
-        
 
-        // printf("Movendo motor_ovo 360° para a direita...\n");
-        // move_stepper_motor(&motor_ovo, DIREITA, 360, 2000); // 360° para a direita
-        // sleep_ms(500);
+        // Verifica se o usuário pressionou A (Modo Manual)
+        if (debounce_button(BUTTON_A_PIN)) {
+            memset(buf, 0, SSD1306_BUF_LEN);
+            WriteString(buf, 10, 20, "Modo Manual");
+            render(buf, &frame_area);
+            sleep_ms(1000); // Pequeno delay para exibição
 
-        // printf("Movendo motor_caneta 50° para a direita...\n");
-        // move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
-        // sleep_ms(500);
+            // Volta para o menu ao pressionar A novamente
+            while (!debounce_button(BUTTON_A_PIN)) {
+                control_stepper_by_joystick(&motor_ovo, &motor_caneta);
+                sleep_ms(500);
+            }
 
-        // printf("Movendo motor_caneta 100° para a esquerda...\n");
-        // move_stepper_motor(&motor_caneta, ESQUERDA, 60, 2000);
-        // sleep_ms(500);
+            memset(buf, 0, SSD1306_BUF_LEN);
+            WriteString(buf, 10, 10, "Escolha:");
+            WriteString(buf, 10, 20, "A - Manual");
+            WriteString(buf, 10, 30, "B - Random");
+            render(buf, &frame_area);
+        }
 
-        // printf("Movendo motor_caneta 50° para a direita...\n");
-        // move_stepper_motor(&motor_caneta, DIREITA, 30, 2000);
-        // sleep_ms(500);
+        // Verifica se o usuário pressionou B (Modo Aleatório)
+        if (debounce_button(BUTTON_B_PIN)) {
+            memset(buf, 0, SSD1306_BUF_LEN);
+            WriteString(buf, 10, 20, "Modo Random");
+            render(buf, &frame_area);
+            sleep_ms(1000); // Pequeno delay para exibição
 
-        // open_servo();
-        // sleep_ms(1000);
-        // close_servo();
-        // sleep_ms(1000);
+            // Volta para o menu ao pressionar A novamente
+            while (!debounce_button(BUTTON_A_PIN)) {
+                draw(&motor_ovo, &motor_caneta, RANDOM, 30);
+                sleep_ms(500);
+            }
 
+            memset(buf, 0, SSD1306_BUF_LEN);
+            WriteString(buf, 10, 10, "Escolha:");
+            WriteString(buf, 10, 20, "A - Manual");
+            WriteString(buf, 10, 30, "B - Random");
+            render(buf, &frame_area);
+        }
+
+        sleep_ms(10); // Evita loop excessivo
     }
-    return 0;
 }
